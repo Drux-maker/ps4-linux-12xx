@@ -15,7 +15,7 @@ valeryy (no Github - contributed to PS4 Baikal southbridges),
 [saya](https://www.youtube.com/channel/UCc20KAcPCj9Ut8IQF3umSjg),    
 [whitehax0r](https://github.com/whitehax0r/ps4-linux-baikal),    
 [DFAUS](https://github.com/DFAUS-git/ps4-baikal-5.4.247-kernel)  
-[rmuxnet](https://github.com/rmuxnet/ps4-linux-12xx) -- and others.
+[rmuxnet](https://gitlab.com/rmuxnet/linux) -- and others.
 
 For a more detailed credits section, check out [this page](https://dionkill.github.io/ps4-linux-tutorial/ending.html#kernel-developers).
 
@@ -27,8 +27,8 @@ The branch names are meant to be descriptive and provide an idea, but they're fa
 Merging all the main fixes into a few distinct branches is a WIP.
 
 > [!NOTE]
-> There is now a 7.x+ kernels repo by rmuxnet at the link above. Feel free to check that out yourself.  
-> Incorporating that and some other changes into this repo is planned for the near future!
+> There is now a 7.x+ kernels repo by rmuxnet at the link above. Feel free to check that out yourself.
+> Incorporating that and some other changes into this repo is planned for the future!
 
 <br>
 
@@ -296,7 +296,7 @@ While many of the bugs and issues prevalent in PS4 Linux kernels, and PS4 Linux 
 A few honorable mentions aimed at improving this scene go to:
 
 1. 6.18, 7.0 Kernels, Kernel Fan Driver, ICC Drivers, Display, GPU and Mesa Fixes:
-    - https://github.com/rmuxnet/ps4-linux-12xx
+    - https://gitlab.com/rmuxnet/linux
     - https://github.com/sony-jaguar-devs  
 The latest repo with a dedicated developer and group for improving PS4 Linux, check them out and all their different development branches  
 Originally based on the sources from this repo (6.15.4).
