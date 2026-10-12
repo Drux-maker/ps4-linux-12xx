@@ -3,7 +3,7 @@ Linux Kernel - On the Sony PlayStation 4
 ========================================
 
 This is a Linux Kernel source tailored to run on exploitable PlayStation 4 systems with various subsystem patches from     
-the [fail0verflow team](https://github.com/fail0verflow/ps4-linux),    
+the [fail0verflow team; marcan](https://github.com/fail0verflow/ps4-linux),    
 [eeply](https://github.com/eeply/ps4-linux),    
 [Ps3itaTeam](https://github.com/Ps3itaTeam/ps4-linux),   
 [rancido](https://github.com/rancido),    
@@ -19,12 +19,13 @@ valeryy (no Github - contributed to PS4 Baikal southbridges),
 
 For a more detailed credits section, check out [this page](https://dionkill.github.io/ps4-linux-tutorial/ending.html#kernel-developers).
 
-This fork aimed to make the internal WiFi+Bluetooth modules on specific PlayStation models with the Marvell 88w8897 combo card (internal codename Torus 2) functional, as they typically error out on the default kernels.
+This fork aimed to make the internal WiFi+Bluetooth modules on specific PlayStation models with the Marvell 88w8897 combo card (internal codename Torus 2) functional, as they typically errored out on the default kernels.
 
-Over time, I also managed to fix the common blackscreen at GUI login issue on newer kernels, and added support for various miscellaneous components such as the MT7668 WiFi and BT chip on certain consoles.  
-The branch names are meant to be descriptive and provide an idea, but they're far from perfect!
-
-Merging all the main fixes into a few distinct branches is a WIP.
+Over time, I also managed to fix a few common problems:
+- Blackscreen at GUI login on newer kernels
+- Built-in MT7668 WiFi and BT chip driver on certain consoles - Baikals or Belize Slims, ported from Linux 5.4
+- Support for various miscellaneous components through the kernel configuration
+- And some small kernel optimizations, CI/CD build scripts (with swap space!), etc.
 
 > [!NOTE]
 > There is now a 7.x+ kernels repo by rmuxnet at the link above. Feel free to check that out yourself.
@@ -35,14 +36,14 @@ Merging all the main fixes into a few distinct branches is a WIP.
 -------
 ## Console Models and Southbridge
 
-While the CUH-1216/1215 models are definitively known to have the Torus 2 models with probelmatic WiFi, along with some 11xx models with similar WiFi issues, here is a list of consoles reported working without any hiccups from the kernels in this repo:
+While the CUH-1216/1215 models are known to have the Torus 2 models with probelmatic WiFi, along with some 11xx models with similar network issues, here is a list of consoles reported working without any hiccups from the kernels in this repo:
 
 | Console Model | Variation | WiFi+BT Chip Present | Compatible Kernel (Patched) |
 |---|---|---| --- |
 | CUH-1216(A/B) | Phat - Belize B0 | Marvell 88w8897 (Torus 2) | *6.15.4, 5.15.15* |
 | CUH-1215(A/B) | Phat - Belize | Marvell 88w8897 (Torus 2) | *6.15.4, 5.15.15*  |
-CUH-1003  | Phat  - Aeolia | ? | *6.15.4; [probably non-built in firmware version](#builtin-fw-anchor)* |
-CUH-1004A | Phat - Aeolia | Marvell 88w8797 (Torus 1) | *6.15.4; [non-built in firmware version](#builtin-fw-anchor)* |
+CUH-1003  | Phat  - Aeolia | ? | *6.15.4; [Probably needs WiFi firmware sourced from PS4 OS](#builtin-fw-anchor)* |
+CUH-1004A | Phat - Aeolia | Marvell 88w8797 (Torus 1) | *6.15.4; [Needs WiFi firmware sourced from PS4 OS](#builtin-fw-anchor)* |
 CUH-1116A | Phat - Aeolia | ? | *6.15.4* |
 CUH-2215B | Slim - Baikal | ? | *5.4.247* |
 CUH-2216A | Slim - Baikal B1 | MediaTek 7668 | *5.4.247* |
@@ -65,14 +66,15 @@ for proper GPU function. [See this issue](https://github.com/feeRnt/ps4-linux-12
 
 
 <a name="builtin-fw-anchor"></a>
-- [[ Certain older models (specifically the 1004A) needed a kernel that
-was built without embedding the latest proprietary firmware blobs (for
-Marvell SDIO WiFi+Bluetooth), and instead functioned properly with older firmware
-sourced from the initramfs. For these, each affected kernel release has a "no-built-in-fw"
-version for best functionality. See the releases page of the referring kernels or [this issue](https://github.com/feeRnt/ps4-linux-12xx/issues/2) for info. ]]
-<br>
+- [[ Certain older models (specifically the 1004A) need a kernel that is built without embedding the latest proprietary firmware blobs (for
+Marvell SDIO WiFi+Bluetooth), and instead function properly with older proprietary firmware
+from the initramfs, which sources it from the PS4 OS (Orbis) kernel directly, and cannot be distributed legally. 
+Make sure your Linux-loader/initramfs gets the firmware correctly. See [this issue](https://github.com/feeRnt/ps4-linux-12xx/issues/2) ]]
 
-- TODO: Add a list with all supported console models, their southbridges, and their compatible kernels.
+
+> [!TIP]
+> ***TODO***
+> Update the table with all supported console models, their southbridges, and compatible kernels.
 
 <br>
 
@@ -84,14 +86,15 @@ The main patches which in combination fix the CUH-1216/1215 wireless module are:
 
 relying on the [patch for added sdio_id for the Function 0](https://github.com/feeRnt/ps4-linux-12xx/commit/f4835fb020010acff2b70e4c5fa9430e07f0073b),
 
-Then a [few SDHCI Host quirks for the PlayStation SDHCI host](https://github.com/feeRnt/ps4-linux-12xx/commit/e6f342df7737722d5e27f0ae3974e493c5fe4ca4) {only the SDHCI_QUIRK2_PRESET_VALUE_BROKEN is needed now},
+then a [few SDHCI Host quirks for the PlayStation SDHCI host](https://github.com/feeRnt/ps4-linux-12xx/commit/e6f342df7737722d5e27f0ae3974e493c5fe4ca4) {only the SDHCI_QUIRK2_PRESET_VALUE_BROKEN is needed now},
 
-additionally with [extra retries for MMC CMD 52 or 53, which it would usually fail on](https://github.com/feeRnt/ps4-linux-12xx/commit/c57162e5ec7a4aa3af3310a36dc963b5c0298dfe) {this is optional}.
+additionally with [extra retries for MMC CMD 52 or 53, which it would usually fail on](https://github.com/feeRnt/ps4-linux-12xx/commit/c57162e5ec7a4aa3af3310a36dc963b5c0298dfe) {this is deemed optional}.
 
-The primary culprit behind the failed SDIO initialization, seems to be that the card doesn't properly support 208 or 200 MHz clock rate on this PS4 SDHCI host, causing the card to show tuning and other command failures.
+The primary culprit behind the failed SDIO initialization, seems to be that the wireless card doesn't properly support 208 or 200 MHz clock rate on this PS4 SDHCI host, causing the devices to show tuning and other command failures.  
+It needs to calculate the MMC clock through the internal driver mechanism for it function well.  
 You can read more about the search for a solution [from here](https://ps4linux.com/forums/d/221-ps4-phat-wifi-fix-test-marvell-8897-torus-20/14).    
 
-Through MUCH trial and error, I was able to reach such an arcane fix,     
+Through much trial and error, I was able to reach such an arcane fix,     
 <br>
 ![Many of the kernels I had to compile and test before finally landing
 on the fix kernel](./IMAGES/github_pic2.png)
@@ -107,36 +110,30 @@ Hard work paid off!
 
 ----
 ## Branches
+`x_old__ps4-linux-5.15.y` and `x_old__ps4-linux-5.15.y-conservative2` are branches with excessive debug logs, that helped me pinpoint the WiFi issue on the MMC stack. Due to the logging, they should only be used for research.    
 
-There are different branches that you can select on the repo,    
-`x_old__ps4-linux-5.15.y` and `x_old__ps4-linux-5.15.y-conservative2` are branches with excessive debug logs, that helped me pinpoint the issue on the whole MMC stack. Due to the logging, it is not advisable to use those kernel branches.    
+The other `x_exp__` prefixed branches were made for debugging & testing a particular subsystem and problem in the kernel, and are not advised to be used.  
+They are only kept for future experiment, archive or study.  
 
-The other "x_experimental__" or "x_exp__" prefixed branches were made for debugging & testing a particular subsystem or problem in the kernel, and are not advised to be used.  
-They are only kept for further future experiment, archive or study only.  
 
-\- \- For example, the `x_experimental__5.15.15-fix-baikal` branch is non-functional.
-Kernel 5.15 is not reported to be working on any Baikal console, but it's kept for testing only.
-
-\
-The `5.15.15-aeolia-belize` is a branch without the PS4 patches from codedwrench's **Baikal** branch.    
-It still runs as intended on a Belize (no blackscreen fix yet), but you will get bad errors. Should be used for testing only.
-
-However, it probably runs on Aeolia models, unlike the \*-belize -only branches. (Not tested yet)
+> [!IMPORTANT]
+> The `5.15.15-aeolia-belize` is a branch without the PS4 patches from codedwrench's **Baikal** branch.  
+> It runs as intended on a Belize, and possibly Aeolia, but you will get bad errors. Should be used for testing only.
 
 ----
 
 The main release branches are:    
-- `5.15.15-belize` : The clean WiFi, Blackscreen & other misc. fixes' branch for Kernel version 5.15.15 on Belize southbridges.   
+ 
+- `6.15.4-aeolia-belize-crashniels` : The clean WiFi, Blackscreen & other misc. fixes' branch for Kernel version 6.15.4, on Aeolia/Belize southbridges.    
+Based on crashniels' source.  
 
-- `5.15.189-belize` : The clean WiFi & Blackscreen fix branch for Kernel version 5.15.189 on Belize southbridges.  
-(Not as well maintained as 5.15.15)
+
+- `5.15.15-belize` : The WiFi, Blackscreen & other misc. fixes' branch for Kernel version 5.15.15 on Belize southbridges.  
+Based on codedwrench's source.
+
 
 - `5.4.247-baikal-dfaus`: A branch for version 5.4.247 with fixed blackscreen and MT7668 support for Baikal southbridges.    
 Based on DFAUS' source.
-
-- `6.15.4-aeolia-belize-crashniels` : The clean WiFi, Blackscreen & other misc. fixes' branch for Kernel version 6.15.4, on Aeolia/Belize southbridges.    
-Based on crashniels' source.  
-This is the primary branch of the repo.
 
 <br>
 
@@ -145,7 +142,7 @@ This is the primary branch of the repo.
 
 To compile any of these branches, you can simply fork the repo, go to the Actions tab and run the Workflow file for `build-kernel_latest.yaml` for a particular branch.
 
-Or if you would like to build locally, just clone the repo for your desired branch and run the necessary commands (commands based on Ubuntu 24.04):
+If you would like to build locally, clone the repo for your desired branch and run the necessary commands (commands based on Ubuntu 24.04):
 
 ### Build-deps
 ```bash
@@ -168,7 +165,7 @@ apt-get build-dep linux -y
 ```bash
 
 git clone https://github.com/feeRnt/ps4-linux-12xx --branch <desired-branch-name> --depth=3
-# keep a low depth to save on space
+# keep a low depth to save space
 
 cd ps4-linux-12xx
 
@@ -194,7 +191,6 @@ wget -nc https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware
 && sudo mv -i mt7668pr2h.bin /lib/firmware/mediatek
 
 ## Rename .config file
-
 mv config .config
 
 ## Set installation variables
@@ -206,8 +202,18 @@ export INSTALL_DIR="${PWD}/install_path/${localversion}/install"
 export KCFLAGS="-march=btver2 -mtune=btver2 -O3"
 export KAFLAGS="-march=btver2 -mtune=btver2 -O3"
 export KCPPFLAGS="-march=btver2 -mtune=btver2 -O3"
-# O3 is experimental; maybe O2 gives better performance on 5.x kernels?
+          # march and mtune optimize the the build instructions
+          # march = oldest architecture on which this code can run
+          # mtune = compiler hint for which architecture the instructions should be
+          # optimized for. The PS4 CPU architecture was based on btver2,
+          # also known as the AMD Jaguar architecture
 
+          # We don't know if -O3 will help, but really anything will help
+          # considering our target hardware was aging when it was new.
+          # O3 is experimental; maybe O2 gives better performance on 5.x kernels.
+
+
+ 
 ## Set build options (for GCC)
 export MAKE_OPTS="-j`nproc` \
              INSTALL_PATH="${INSTALL_DIR}/boot" \
@@ -240,13 +246,12 @@ scripts/config --disable CONFIG_LTO_CLANG_FULL
 scripts/config --enable CONFIG_LTO_NONE
 # Full LTO is enabled by default on the configs in this repo,
 # except for the 5.4 kernels, which don't have this option.
-
-# Explicitly disable it here
+# We can explicitly disable it here
 # Selecting GCC as the compiler automatically deselects LTO as well
 
-# Warning ::: you might want to reduce the thread/processor count, j, with fullLTO builds
-# Ensure you have proper RAM and swapspace, otherwise you will likely run Out of Memory (OOM).
-# 32 GB of memory is recommended for fulLTO builds. thinLTO should be much easier however.
+# > [!WARNING] ::: you might want to reduce the thread/processor count, j, with fullLTO builds
+# > Ensure you have proper RAM and swapspace, otherwise you will likely run Out of Memory (OOM).
+# > 32 GB of memory is recommended for fulLTO builds. thinLTO should be much easier however.
 
 ## Compilation:
 make ${MAKE_OPTS} olddefconfig
@@ -276,7 +281,7 @@ The bzImage should now be in boot/, and any modules compiled in lib/ .
 
 To get some pre-compiled kernels, go to the [releases section](https://github.com/feeRnt/ps4-linux-12xx/releases), and choose a kernel (bzImage) based on your needed version.
 
-Please read the boldened out and highlighted text, as they contain some information that might be useful for a particular release. It's very wordy, that needs to be fixed!!
+Please read the boldened out and highlighted text, as they contain some information that might be useful for a particular release. It's very wordy. That will be fixed.
 
 <br>
 
@@ -298,7 +303,7 @@ A few honorable mentions aimed at improving this scene go to:
 1. 6.18, 7.0 Kernels, Kernel Fan Driver, ICC Drivers, Display, GPU and Mesa Fixes:
     - https://gitlab.com/rmuxnet/linux
     - https://github.com/sony-jaguar-devs  
-The latest repo with a dedicated developer and group for improving PS4 Linux, check them out and all their different development branches  
+The latest repo with a dedicated developer and group for improving PS4 Linux, check them out and all their different development branches.  
 Originally based on the sources from this repo (6.15.4).
 
 
@@ -351,7 +356,7 @@ Attempts at using the display EDID information from your monitor, to use in Linu
 
 ### Firmware and Drivers Notice
 
-This repository includes non-GPL firmware/cfg blobs under extra_firmware/,
+This repository includes non-GPL firmware/cfg blobs under extra_firmware/.
 
 These files (e.g. Marvell and MediaTek firmware) are distributed under
 their respective vendor licenses and are not covered by the GPL.
