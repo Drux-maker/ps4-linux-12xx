@@ -73,7 +73,7 @@ Make sure your Linux-loader/initramfs gets the firmware correctly. See [this iss
 
 
 > [!TIP]
-> ***TODO***
+> ***TODO:***  
 > Update the table with all supported console models, their southbridges, and compatible kernels.
 
 <br>
@@ -248,11 +248,13 @@ scripts/config --enable CONFIG_LTO_NONE
 # except for the 5.4 kernels, which don't have this option.
 # We can explicitly disable it here
 # Selecting GCC as the compiler automatically deselects LTO as well
+```
+> [!WARNING]
+> ::: You might want to reduce the thread/processor count, j, with fullLTO builds :::
+> Ensure you have proper RAM and swapspace, otherwise you will likely run Out of Memory (OOM).
+> 32 GB of memory is recommended for fulLTO builds. thinLTO should be much easier however.
 
-# > [!WARNING] ::: you might want to reduce the thread/processor count, j, with fullLTO builds
-# > Ensure you have proper RAM and swapspace, otherwise you will likely run Out of Memory (OOM).
-# > 32 GB of memory is recommended for fulLTO builds. thinLTO should be much easier however.
-
+```bash
 ## Compilation:
 make ${MAKE_OPTS} olddefconfig
 make ${MAKE_OPTS} prepare
